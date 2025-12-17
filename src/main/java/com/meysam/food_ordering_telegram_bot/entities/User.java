@@ -17,10 +17,6 @@ public class User {
 
     @Id
     @Column(name = "telegram_id")
-    private Long telegramId; // The unique ID from Telegram
-
-    private String username;
-    private String firstName;
-    private String lastName;
+    private String telegramId;
 
 }
