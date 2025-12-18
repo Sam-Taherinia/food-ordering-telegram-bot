@@ -7,7 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class FoodOrderingTelegramBotApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(FoodOrderingTelegramBotApplication.class, args);
+
+        SpringApplication.run(FoodOrderingTelegramBotApplication.class, args);
+
 	}
 
 }
