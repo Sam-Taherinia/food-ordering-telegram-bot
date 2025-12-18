@@ -1,6 +1,7 @@
 package com.meysam.food_ordering_telegram_bot.services;
 
 import com.meysam.food_ordering_telegram_bot.entities.Food;
+import com.meysam.food_ordering_telegram_bot.repositories.FoodRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -27,11 +28,13 @@ public class FoodBot extends TelegramLongPollingBot {
     private String botToken;
 
     private final OrderService orderService;
+    private final FoodRepository foodRepo;
 
     private final Map<String, Long> userSelectionState = new ConcurrentHashMap<>();
 
-    public FoodBot(OrderService orderService) {
+    public FoodBot(OrderService orderService,  FoodRepository foodRepo) {
         this.orderService = orderService;
+        this.foodRepo = foodRepo;
     }
 
     @Override
@@ -59,7 +62,7 @@ public class FoodBot extends TelegramLongPollingBot {
 
             userSelectionState.put(userId, foodId);
 
-            sendResponse(userId, "You selected a food item. Please enter the quantity (a number greater than 0):");
+            sendResponse(userId, "تعداد سفارش خود از این غذا را مشخص کنید");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,7 +83,7 @@ public class FoodBot extends TelegramLongPollingBot {
         if (userSelectionState.containsKey(userId)) {
             processQuantityInput(userId, text);
         } else {
-            sendResponse(userId, "Welcome! Type /start to see the food menu.");
+            sendResponse(userId, "برای دیدن منو روی /start کلیک کنید");
         }
     }
 
@@ -89,7 +92,7 @@ public class FoodBot extends TelegramLongPollingBot {
             int quantity = Integer.parseInt(text.trim());
 
             if (quantity <= 0) {
-                sendResponse(userId, "Invalid quantity! Please enter a number greater than 0:");
+                sendResponse(userId, "لطفا یک عدد وارد کنید. عدد باید بزرگتر از صفر و با بصورت اعداد انگلیسی وارد شود");
                 return;
             }
 
@@ -98,11 +101,12 @@ public class FoodBot extends TelegramLongPollingBot {
             orderService.createOrder(String.valueOf(Long.parseLong(userId)), foodId, quantity);
 
             userSelectionState.remove(userId);
+            Double chosenFoodPrice = foodRepo.findById(foodId).map(Food::getPrice).orElse(0.0);
 
-            sendResponse(userId, "Successfully ordered! Your order has been recorded.");
+            sendResponse(userId, "سفارش شما تکمیل شد بعد از دریافت سفارش مبلغ: " + quantity * chosenFoodPrice + " تومان به مامور ارسال غذا تحویل دهید");
 
         } catch (NumberFormatException e) {
-            sendResponse(userId, "That's not a valid number. Please enter a numeric quantity:");
+            sendResponse(userId, "لطفا یک عدد وارد کنید. عدد باید بزرگتر از صفر و با بصورت اعداد انگلیسی وارد شود");
         }
     }
 
@@ -113,7 +117,7 @@ public class FoodBot extends TelegramLongPollingBot {
 
         for (Food food : foods) {
             InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText(food.getName() + " - $" + food.getPrice());
+            button.setText(food.getName() + " - " + food.getPrice() + " تومان ");
             button.setCallbackData(String.valueOf(food.getId()));
 
             List<InlineKeyboardButton> row = new ArrayList<>();
@@ -125,7 +129,7 @@ public class FoodBot extends TelegramLongPollingBot {
         try {
             execute(SendMessage.builder()
                     .chatId(chatId)
-                    .text("Menu:")
+                    .text("منو:")
                     .replyMarkup(markup)
                     .build());
         } catch (TelegramApiException e) {

@@ -29,14 +29,14 @@ public class FoodOrderingTelegramBotApplication {
         return args -> {
 
             if (foodRepo.count() == 0) {
-                Food pizza = new Food(null, "Pizza", 10.0);
-                Food burger = new Food(null, "Burger", 5.5);
+                Food pizza = new Food(null, "پیتزا پپرونی", 345_000.0);
+                Food burger = new Food(null, "چلو جوجه", 125_000.0);
                 foodRepo.saveAll(List.of(pizza, burger));
             }
 
             if (userRepo.count() == 0) {
-                User user1 = new User("MeysamTN");
-                User user2 = new User("Ali");
+                User user1 = new User("@MeysamTN");
+                User user2 = new User("@Ali");
                 userRepo.saveAll(List.of(user1, user2));
             }
 
